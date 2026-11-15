@@ -26,10 +26,21 @@ jobs:
         with:
           gradle-version: '9.3.1'
 
-      - name: Restore debug keystore for debugConfig signing
+      - name: Ensure debug keystore exists for debugConfig signing
         run: |
-          if [ -f debug.keystore.base64 ] && [ ! -f debug.keystore ]; then
-            base64 -d debug.keystore.base64 > debug.keystore
+          if [ ! -f debug.keystore ] && [ -s debug.keystore.base64 ]; then
+            base64 -d debug.keystore.base64 > debug.keystore || rm -f debug.keystore
+          fi
+          if [ ! -s debug.keystore ]; then
+            keytool -genkeypair -noprompt \
+              -keystore debug.keystore \
+              -storepass android \
+              -alias androiddebugkey \
+              -keypass android \
+              -keyalg RSA \
+              -keysize 2048 \
+              -validity 10000 \
+              -dname "CN=Android Debug,O=Android,C=US"
           fi
 
       - name: Run unit tests
