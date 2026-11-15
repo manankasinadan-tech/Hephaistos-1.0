@@ -28,9 +28,9 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeoutOrNull
 import org.json.JSONObject
 import java.io.File
-import java.util.concurrent.TimeUnit
 
 data class FilePickerRequest(
     val title: String,
@@ -425,28 +425,43 @@ class HephaistosViewModel(application: Application) : AndroidViewModel(applicati
                         .redirectErrorStream(true)
                         .start()
 
-                    val output = process.inputStream.bufferedReader().readText()
-                    val finished = process.waitFor(5, TimeUnit.SECONDS)
-                    if (!finished) {
-                        process.destroyForcibly()
+                    val outputBuilder = StringBuilder()
+                    val readerThread = Thread {
+                        runCatching {
+                            process.inputStream.bufferedReader().useLines { lines ->
+                                lines.forEach { line ->
+                                    outputBuilder.appendLine(line)
+                                }
+                            }
+                        }
+                    }.apply { start() }
+
+                    val exitCode = withTimeoutOrNull(5_000L) {
+                        val code = process.waitFor()
+                        readerThread.join(1_000L)
+                        code
+                    }
+
+                    if (exitCode == null) {
+                        process.destroy()
                         HephaistosBus.appendLog(
                             HephaistosContract.LAUNCHER_PACKAGE,
                             TerminalLevel.ERR,
                             "Délai d'exécution dépassé (5s)."
                         )
                     } else {
-                        val lines = output.lines().filter { it.isNotBlank() }
+                        val lines = outputBuilder.toString().lines().filter { it.isNotBlank() }
                         if (lines.isEmpty()) {
                             HephaistosBus.appendLog(
                                 HephaistosContract.LAUNCHER_PACKAGE,
                                 TerminalLevel.INFO,
-                                "(code retour ${process.exitValue()})"
+                                "(code retour $exitCode)"
                             )
                         } else {
                             lines.forEach { line ->
                                 HephaistosBus.appendLog(
                                     HephaistosContract.LAUNCHER_PACKAGE,
-                                    if (process.exitValue() == 0) TerminalLevel.OUT else TerminalLevel.ERR,
+                                    if (exitCode == 0) TerminalLevel.OUT else TerminalLevel.ERR,
                                     line
                                 )
                             }
