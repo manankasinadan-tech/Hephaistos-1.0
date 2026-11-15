@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
+    <!-- Android 11+ targeted package visibility for com.hephaistos.* modules -->
+    <queries>
+        <intent>
+            <action android:name="com.hephaistos.action.MODULE" />
+        </intent>
+        <intent>
+            <action android:name="com.hephaistos.action.EXECUTE" />
+        </intent>
+        <intent>
+            <action android:name="com.hephaistos.action.GET_MANUAL" />
+        </intent>
+    </queries>
+
+    <application
+        android:allowBackup="true"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:fullBackupContent="@xml/backup_rules"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.Hephaistos">
+
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:label="@string/app_name"
+            android:launchMode="singleTop"
+            android:theme="@style/Theme.Hephaistos"
+            android:windowSoftInputMode="adjustResize">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="com.hephaistos.action.OPEN_LAUNCHER" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
+
+        <!-- Shared IPC Bus Receiver for logs, progress updates, popups & command results from modules -->
+        <receiver
+            android:name=".ipc.HephaistosBusReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="com.hephaistos.action.LOG" />
+                <action android:name="com.hephaistos.action.PROGRESS" />
+                <action android:name="com.hephaistos.action.SHOW_POPUP" />
+                <action android:name="com.hephaistos.action.COMMAND_RESULT" />
+            </intent-filter>
+        </receiver>
+
+        <!-- Notification action relay receiver -->
+        <receiver
+            android:name=".notifications.HephaistosNotificationActionReceiver"
+            android:exported="false" />
+
+    </application>
+
+</manifest>

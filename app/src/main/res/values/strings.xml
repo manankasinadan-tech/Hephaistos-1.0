@@ -1,0 +1,12 @@
+<resources>
+    <string name="app_name">HEPHAISTOS</string>
+    <string name="nav_home">Accueil</string>
+    <string name="nav_settings">Paramètres</string>
+    <string name="terminal_title">Terminal</string>
+    <string name="file_picker_title">Gestionnaire de fichiers</string>
+    <string name="manual_title">Mode d\'emploi</string>
+    <string name="notif_channel_progress_name">Progression des modules</string>
+    <string name="notif_channel_progress_desc">Suivi en direct des tâches exécutées par les modules HEPHAISTOS</string>
+    <string name="notif_channel_actions_name">Actions et résultats</string>
+    <string name="notif_channel_actions_desc">Notifications d\'état et actions rapides des modules HEPHAISTOS</string>
+</resources>

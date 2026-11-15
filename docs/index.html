@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HEPHAISTOS — Guide de l'écosystème modulaire</title>
+  <style>
+    :root {
+      --bg: #F7F6F2;
+      --surface: #FFFFFF;
+      --surface-soft: #EFECE6;
+      --ink: #1E2022;
+      --muted: #63686E;
+      --primary: #4A6572;
+      --primary-soft: #DCE5EA;
+      --sage: #7C8B7A;
+      --border: #E4E0D8;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #141619;
+        --surface: #1C1F24;
+        --surface-soft: #252930;
+        --ink: #ECEEF1;
+        --muted: #9BA1A8;
+        --primary: #8FAEC0;
+        --primary-soft: #293D48;
+        --sage: #9CB09A;
+        --border: #2B3038;
+      }
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Plus Jakarta Sans", "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--ink);
+      line-height: 1.65;
+    }
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 48px 24px 80px;
+    }
+    header {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      margin-bottom: 36px;
+    }
+    .logo {
+      width: 58px;
+      height: 58px;
+      border-radius: 16px;
+      background: #516878;
+      color: #F7F6F2;
+      display: grid;
+      place-items: center;
+      font-weight: 700;
+      font-size: 28px;
+      letter-spacing: -1px;
+      flex-shrink: 0;
+    }
+    h1 { margin: 0; font-size: 2rem; letter-spacing: -0.02em; }
+    .subtitle { margin: 4px 0 0; color: var(--muted); font-size: 0.98rem; }
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 24px;
+      margin-bottom: 20px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 16px;
+      margin-top: 18px;
+    }
+    .nav-card {
+      display: block;
+      text-decoration: none;
+      color: inherit;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 20px;
+      transition: transform 0.15s ease, border-color 0.15s ease;
+    }
+    .nav-card:hover {
+      transform: translateY(-2px);
+      border-color: var(--primary);
+    }
+    .badge {
+      display: inline-block;
+      background: var(--primary-soft);
+      color: var(--primary);
+      font-size: 0.76rem;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 999px;
+      margin-bottom: 10px;
+    }
+    pre {
+      background: var(--surface-soft);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+      overflow-x: auto;
+      font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+      font-size: 0.86rem;
+    }
+    h2 { margin-top: 0; font-size: 1.25rem; }
+    ul { padding-left: 20px; }
+    a { color: var(--primary); }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="logo">H</div>
+      <div>
+        <h1>HEPHAISTOS</h1>
+        <p class="subtitle">
+          Écosystème Android modulaire sans interface • Package <code>com.hephaistos.launcher</code>
+        </p>
+      </div>
+    </header>
+
+    <section class="card">
+      <span class="badge">FR / EN • Ecosystem Spec v1.0</span>
+      <h2>Comment créer les futures applications de l'environnement HEPHAISTOS</h2>
+      <p>
+        Chaque future application de l'écosystème doit porter un nom de package <code>com.hephaistos.&lt;module&gt;</code>
+        et ne contenir <strong>aucune interface graphique</strong>. HEPHAISTOS détecte automatiquement l'APK, lit son manifeste JSON
+        (section <code>ui</code> + section <code>manual</code>), génère son interface uniforme (Clair / Sombre / Système),
+        fournit la popup de sélection de fichiers, le terminal intégré et les notifications de progression.
+      </p>
+      <p>
+        Each module also embeds a machine-readable <strong>manual</strong> (<em>mode d'emploi</em>) describing its commands and parameters
+        so both HEPHAISTOS and <strong>other <code>com.hephaistos.*</code> modules</strong> can orchestrate each other cleanly.
+      </p>
+    </section>
+
+    <div class="grid">
+      <a class="nav-card" href="https://github.com/RakotonirinaTDaniel/hephaistos/blob/main/docs/ARCHITECTURE.md">
+        <span class="badge">01 • Architecture</span>
+        <h3>Séparation UI / Logique</h3>
+        <p class="subtitle">Modèle lanceur + moteurs headless, flux inter-modules et cycle de vie Android.</p>
+      </a>
+
+      <a class="nav-card" href="https://github.com/RakotonirinaTDaniel/hephaistos/blob/main/docs/UI_RULES.md">
+        <span class="badge">02 • Design System</span>
+        <h3>Règles d'Interface Unifiées</h3>
+        <p class="subtitle">Palette soft, Accueil, Liste/Grille, Cartes, Toggles, Dropdown, File Picker, Popups, Notifications & Terminal.</p>
+      </a>
+
+      <a class="nav-card" href="https://github.com/RakotonirinaTDaniel/hephaistos/blob/main/docs/MODULE_PROTOCOL.md">
+        <span class="badge">03 • Protocole IPC</span>
+        <h3>Détection & Mode d'Emploi</h3>
+        <p class="subtitle">Manifest XML, schéma JSON complet <code>ui</code> + <code>manual</code>, Intents et Broadcasts.</p>
+      </a>
+
+      <a class="nav-card" href="https://github.com/RakotonirinaTDaniel/hephaistos/blob/main/docs/AI_PROMPT_GUIDE.md">
+        <span class="badge">04 • Pour toute IA</span>
+        <h3>Spécification & Prompt Maître</h3>
+        <p class="subtitle">Guide complet prêt à fournir à n'importe quelle IA pour générer un module moteur puissant.</p>
+      </a>
+    </div>
+
+    <section class="card" style="margin-top: 24px;">
+      <h2>Démarrage rapide — Contrat minimal d'un module</h2>
+<pre>&lt;!-- AndroidManifest.xml du module com.hephaistos.monmodule --&gt;
+&lt;service
+    android:name=".ModuleEngineService"
+    android:exported="true"&gt;
+    &lt;intent-filter&gt;
+        &lt;action android:name="com.hephaistos.action.MODULE" /&gt;
+        &lt;action android:name="com.hephaistos.action.EXECUTE" /&gt;
+    &lt;/intent-filter&gt;
+    &lt;meta-data
+        android:name="com.hephaistos.module.manifest"
+        android:resource="@raw/hephaistos_manifest" /&gt;
+&lt;/service&gt;</pre>
+      <p style="margin-bottom: 0;">
+        Dépôt source : <a href="https://github.com/RakotonirinaTDaniel/hephaistos">github.com/RakotonirinaTDaniel/hephaistos</a>
+      </p>
+    </section>
+  </div>
+</body>
+</html>

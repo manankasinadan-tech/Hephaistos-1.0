@@ -1,0 +1,6 @@
+{
+  "name": "HEPHAISTOS",
+  "description": "Lanceur minimaliste et moteur d'interface unifié pour les modules sans interface com.hephaistos.*",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
