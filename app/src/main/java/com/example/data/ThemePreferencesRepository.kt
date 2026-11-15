@@ -3,6 +3,7 @@ package com.example.data
 import android.content.Context
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
@@ -18,6 +19,8 @@ class ThemePreferencesRepository(private val context: Context) {
     private object Keys {
         val THEME_MODE = stringPreferencesKey("theme_mode")
         val DEFAULT_LAYOUT = stringPreferencesKey("default_layout")
+        val AUTO_GRANT_SATELLITES = booleanPreferencesKey("auto_grant_satellites")
+        val ROOT_ACCESS_ENABLED = booleanPreferencesKey("root_access_enabled")
     }
 
     val themeMode: Flow<ThemeMode> = context.dataStore.data.map { prefs ->
@@ -30,6 +33,14 @@ class ThemePreferencesRepository(private val context: Context) {
         runCatching { LayoutMode.valueOf(raw) }.getOrDefault(LayoutMode.LIST)
     }
 
+    val autoGrantSatellites: Flow<Boolean> = context.dataStore.data.map { prefs ->
+        prefs[Keys.AUTO_GRANT_SATELLITES] ?: true
+    }
+
+    val rootAccessEnabled: Flow<Boolean> = context.dataStore.data.map { prefs ->
+        prefs[Keys.ROOT_ACCESS_ENABLED] ?: false
+    }
+
     suspend fun setThemeMode(mode: ThemeMode) {
         context.dataStore.edit { prefs ->
             prefs[Keys.THEME_MODE] = mode.name
@@ -39,6 +50,18 @@ class ThemePreferencesRepository(private val context: Context) {
     suspend fun setDefaultLayout(layout: LayoutMode) {
         context.dataStore.edit { prefs ->
             prefs[Keys.DEFAULT_LAYOUT] = layout.name
+        }
+    }
+
+    suspend fun setAutoGrantSatellites(enabled: Boolean) {
+        context.dataStore.edit { prefs ->
+            prefs[Keys.AUTO_GRANT_SATELLITES] = enabled
+        }
+    }
+
+    suspend fun setRootAccessEnabled(enabled: Boolean) {
+        context.dataStore.edit { prefs ->
+            prefs[Keys.ROOT_ACCESS_ENABLED] = enabled
         }
     }
 }

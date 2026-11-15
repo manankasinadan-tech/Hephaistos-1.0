@@ -19,6 +19,7 @@ object HephaistosContract {
     const val ACTION_PROGRESS = "com.hephaistos.action.PROGRESS"
     const val ACTION_SHOW_POPUP = "com.hephaistos.action.SHOW_POPUP"
     const val ACTION_COMMAND_RESULT = "com.hephaistos.action.COMMAND_RESULT"
+    const val ACTION_ROOT_BRIDGE = "com.hephaistos.action.ROOT_BRIDGE"
 
     // Extras
     const val EXTRA_COMMAND_ID = "hephaistos.extra.COMMAND_ID"

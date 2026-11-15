@@ -6,6 +6,8 @@ import android.net.Uri
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.data.ModuleDiscoveryManager
+import com.example.data.RootStatus
+import com.example.data.SatellitePrivilegeManager
 import com.example.data.ThemePreferencesRepository
 import com.example.data.WorkspaceFileHelper
 import com.example.ipc.HephaistosBus
@@ -24,6 +26,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -43,6 +46,7 @@ class HephaistosViewModel(application: Application) : AndroidViewModel(applicati
 
     private val prefsRepo = ThemePreferencesRepository(application)
     private val discoveryManager = ModuleDiscoveryManager(application)
+    val privilegeManager = SatellitePrivilegeManager(application)
     val fileHelper = WorkspaceFileHelper(application)
 
     private var packageReceiver: BroadcastReceiver? = null
@@ -58,6 +62,32 @@ class HephaistosViewModel(application: Application) : AndroidViewModel(applicati
         started = SharingStarted.WhileSubscribed(5_000),
         initialValue = LayoutMode.LIST
     )
+
+    val autoGrantSatellites: StateFlow<Boolean> = prefsRepo.autoGrantSatellites.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5_000),
+        initialValue = true
+    )
+
+    val rootAccessEnabled: StateFlow<Boolean> = prefsRepo.rootAccessEnabled.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5_000),
+        initialValue = false
+    )
+
+    private val _storageGranted = MutableStateFlow(privilegeManager.hasStoragePermission())
+    val storageGranted: StateFlow<Boolean> = _storageGranted.asStateFlow()
+
+    private val _rootStatus = MutableStateFlow(
+        RootStatus(isGranted = false, methodLabel = "Vérification non effectuée")
+    )
+    val rootStatus: StateFlow<RootStatus> = _rootStatus.asStateFlow()
+
+    private val _isGrantingPrivileges = MutableStateFlow(false)
+    val isGrantingPrivileges: StateFlow<Boolean> = _isGrantingPrivileges.asStateFlow()
+
+    private val _lastPrivilegeReport = MutableStateFlow<String?>(null)
+    val lastPrivilegeReport: StateFlow<String?> = _lastPrivilegeReport.asStateFlow()
 
     private val _modules = MutableStateFlow<List<HephaistosModule>>(emptyList())
     val modules: StateFlow<List<HephaistosModule>> = _modules.asStateFlow()
@@ -82,6 +112,7 @@ class HephaistosViewModel(application: Application) : AndroidViewModel(applicati
     val activePopup: StateFlow<ActivePopupRequest?> = HephaistosBus.popupRequest
 
     init {
+        refreshPrivilegeStatus()
         refreshModules()
         packageReceiver = discoveryManager.registerPackageChangeReceiver {
             HephaistosBus.appendLog(
@@ -100,6 +131,73 @@ class HephaistosViewModel(application: Application) : AndroidViewModel(applicati
         }
     }
 
+    fun refreshPrivilegeStatus() {
+        _storageGranted.value = privilegeManager.hasStoragePermission()
+        viewModelScope.launch {
+            val enabled = prefsRepo.rootAccessEnabled.first()
+            if (enabled) {
+                val status = privilegeManager.verifyRootAccess()
+                _rootStatus.value = status
+                if (!status.isGranted) {
+                    prefsRepo.setRootAccessEnabled(false)
+                }
+            }
+        }
+    }
+
+    fun requestRootAndApplyToSatellites() {
+        viewModelScope.launch {
+            _isGrantingPrivileges.value = true
+            val status = privilegeManager.verifyRootAccess()
+            _rootStatus.value = status
+            prefsRepo.setRootAccessEnabled(status.isGranted)
+
+            if (status.isGranted) {
+                if (!privilegeManager.hasStoragePermission()) {
+                    privilegeManager.grantSelfStorageViaRoot()
+                    _storageGranted.value = privilegeManager.hasStoragePermission()
+                }
+                val summary = privilegeManager.grantAllSatellites(_modules.value)
+                _lastPrivilegeReport.value = summary.message
+            } else {
+                _lastPrivilegeReport.value = status.methodLabel
+            }
+            _isGrantingPrivileges.value = false
+        }
+    }
+
+    fun tryGrantSelfStorageViaRootIfActive(onFallbackToSystemSettings: () -> Unit) {
+        viewModelScope.launch {
+            if (_rootStatus.value.isGranted) {
+                val ok = privilegeManager.grantSelfStorageViaRoot()
+                _storageGranted.value = privilegeManager.hasStoragePermission()
+                if (!ok || !_storageGranted.value) {
+                    onFallbackToSystemSettings()
+                }
+            } else {
+                onFallbackToSystemSettings()
+            }
+        }
+    }
+
+    fun setAutoGrantSatellites(enabled: Boolean) {
+        viewModelScope.launch {
+            prefsRepo.setAutoGrantSatellites(enabled)
+            if (enabled && _rootStatus.value.isGranted) {
+                applyPrivilegesToSatellitesNow()
+            }
+        }
+    }
+
+    fun applyPrivilegesToSatellitesNow() {
+        viewModelScope.launch {
+            _isGrantingPrivileges.value = true
+            val summary = privilegeManager.grantAllSatellites(_modules.value)
+            _lastPrivilegeReport.value = summary.message
+            _isGrantingPrivileges.value = false
+        }
+    }
+
     fun refreshModules() {
         viewModelScope.launch {
             _isScanning.value = true
@@ -107,6 +205,13 @@ class HephaistosViewModel(application: Application) : AndroidViewModel(applicati
             _modules.value = found
             initializeDefaultValues(found)
             _isScanning.value = false
+
+            val autoEnabled = prefsRepo.autoGrantSatellites.first()
+            val rootEnabled = prefsRepo.rootAccessEnabled.first()
+            if (autoEnabled && rootEnabled && found.isNotEmpty()) {
+                val summary = privilegeManager.grantAllSatellites(found)
+                _lastPrivilegeReport.value = summary.message
+            }
         }
     }
 

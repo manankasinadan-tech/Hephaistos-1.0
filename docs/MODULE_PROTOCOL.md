@@ -279,3 +279,16 @@ fun emitProgressToHephaistos(
     context.sendBroadcast(intent)
 }
 ```
+
+---
+
+## 5. Attribution automatique Root, Stockage & Permissions aux Satellites
+
+Lorsque l'utilisateur accorde **Root (`su`)** et active l'option **Attribution automatique aux satellites** dans **Paramètres** de HEPHAISTOS :
+
+1. **Permissions déclarées (`pm grant`)** : HEPHAISTOS inspecte les `requestedPermissions` du satellite via `PackageManager` et accorde automatiquement toutes ses permissions runtime sans interaction manuelle.
+2. **Stockage complet (`appops`)** : HEPHAISTOS accorde automatiquement `MANAGE_EXTERNAL_STORAGE` et `LEGACY_STORAGE` à chaque satellite `com.hephaistos.*`.
+3. **Accès Root automatique** :
+   - Sous **Magisk**, HEPHAISTOS injecte automatiquement la règle `policy=2` pour l'UID du satellite dans la base Magisk (`magisk --sqlite`).
+   - Sur tout environnement root (Magisk, KernelSU, APatch, `su`), le satellite peut aussi lier le service **`com.hephaistos.action.ROOT_BRIDGE`** (`HephaistosRootService`, qui vérifie l'UID appelant `com.hephaistos.*`) via `Messenger` (`what = 1`, bundle `"command"` -> réponse `what = 2`, `"exit_code"`, `"output"`).
+

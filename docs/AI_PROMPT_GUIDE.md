@@ -54,6 +54,10 @@ Tu dois créer une application Android (Kotlin, Gradle Kotlin DSL) appartenant �
 - `HephaistosBridge.kt` (émission `LOG`, `PROGRESS`, `SHOW_POPUP`, `COMMAND_RESULT` + client d'appel inter-modules lisant les `manual` distants)
 - `ModuleEngineService.kt` (dispatcher des commandes + coroutines)
 - Couche métier pure (classes Kotlin testables unitairement sans dépendance UI).
+
+8. **Permissions, Stockage & Root automatiques** :
+   - Déclarez normalement les permissions nécessaires dans `AndroidManifest.xml` du module : si l'utilisateur a activé Root + attribution automatique dans HEPHAISTOS, HEPHAISTOS les accordera automatiquement (`pm grant`, `MANAGE_EXTERNAL_STORAGE`, politique Magisk et pont `com.hephaistos.action.ROOT_BRIDGE`).
+   - Prévoyez néanmoins une dégradation propre si le module est testé sur un appareil non rooté (consommez les `content://` URIs SAF sans planter).
 ```
 
 ---

@@ -186,14 +186,32 @@ fun HephaistosApp(
 
                 composable(HephaistosRoutes.ROUTE_SETTINGS) {
                     val themeMode by viewModel.themeMode.collectAsStateWithLifecycle()
+                    val storageGranted by viewModel.storageGranted.collectAsStateWithLifecycle()
+                    val rootStatus by viewModel.rootStatus.collectAsStateWithLifecycle()
+                    val autoGrantSatellites by viewModel.autoGrantSatellites.collectAsStateWithLifecycle()
+                    val isGrantingPrivileges by viewModel.isGrantingPrivileges.collectAsStateWithLifecycle()
+                    val lastPrivilegeReport by viewModel.lastPrivilegeReport.collectAsStateWithLifecycle()
                     SettingsScreen(
                         themeMode = themeMode,
                         defaultLayout = defaultLayout,
+                        storageGranted = storageGranted,
+                        rootStatus = rootStatus,
+                        autoGrantSatellites = autoGrantSatellites,
+                        isGrantingPrivileges = isGrantingPrivileges,
+                        lastPrivilegeReport = lastPrivilegeReport,
+                        satellitesCount = modules.size,
                         onSelectTheme = { viewModel.setThemeMode(it) },
                         onSelectDefaultLayout = {
                             homeLayoutOverride = null
                             viewModel.setDefaultLayout(it)
                         },
+                        onGrantStorageClicked = { fallbackLaunch ->
+                            viewModel.tryGrantSelfStorageViaRootIfActive(fallbackLaunch)
+                        },
+                        onGrantRootClicked = { viewModel.requestRootAndApplyToSatellites() },
+                        onToggleAutoGrantSatellites = { viewModel.setAutoGrantSatellites(it) },
+                        onApplySatellitesNow = { viewModel.applyPrivilegesToSatellitesNow() },
+                        onRefreshPrivilegeStatus = { viewModel.refreshPrivilegeStatus() },
                         onOpenTerminal = {
                             terminalFilterPackage = null
                             showTerminal = true
